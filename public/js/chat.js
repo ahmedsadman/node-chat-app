@@ -4,6 +4,7 @@ const element = {
     messages: document.getElementById('messages'),
     messageInput: document.querySelector('input[name="message"]'),
     locationButton: document.getElementById('send-location'),
+    userList: document.getElementById('users'),
 };
 
 const scrollToBottom = () => {
@@ -23,10 +24,32 @@ const scrollToBottom = () => {
 
 socket.on('connect', () => {
     console.log('Connected to server');
+    const params = getUrlParameters();
+    socket.emit('join', params, (error) => {
+        if (error) {
+            alert(error);
+            window.location.href = '/';
+        } else {
+            console.log('Join successful');
+        }
+    });
 });
 
 socket.on('disconnect', () => {
     console.log('Disconnected from server');
+});
+
+socket.on('updateUserList', (users) => {
+    console.log('Users list', users);
+    const ol = document.createElement('ol');
+
+    users.forEach((user) => {
+        const li = document.createElement('li');
+        li.appendChild(document.createTextNode(user));
+        ol.appendChild(li);
+    });
+
+    element.userList.innerHTML = ol.innerHTML;
 });
 
 socket.on('newMessage', (message) => {
@@ -67,7 +90,7 @@ document.querySelector('#message-form').onsubmit = (e) => {
 };
 
 element.locationButton.onclick = (e) => {
-    if (!navigator.geolocation) return alert('Geolocation not supported by your browser');
+    if (!navigator.geolocation) return alert('Geolocation is not supported by your browser');
 
     element.locationButton.disabled = true;
     element.locationButton.innerText = 'Sending Location';
