@@ -15,13 +15,14 @@ socket.on('disconnect', () => {
 });
 
 socket.on('newMessage', (message) => {
-    console.log('newMessage: ', message);
-    const html = `<li>${message.from}: ${message.text}</li>`;
+    const formattedTime = moment(message.createdAt).format('h:mm a');
+    const html = `<li>${message.from} (${formattedTime}): ${message.text}</li>`;
     element.messages.insertAdjacentHTML('beforeend', html);
 });
 
 socket.on('newLocationMessage', (message) => {
-    const html = `<li>${message.from}: <a href="${message.url}" target="_blank">My Current Location</a></li>`;
+    const formattedTime = moment(message.createdAt).format('h:mm a');
+    const html = `<li>${message.from} (${formattedTime}): <a href="${message.url}" target="_blank">My Current Location</a></li>`;
     element.messages.insertAdjacentHTML('beforeend', html);
 });
 
