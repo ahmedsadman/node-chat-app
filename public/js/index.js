@@ -16,13 +16,23 @@ socket.on('disconnect', () => {
 
 socket.on('newMessage', (message) => {
     const formattedTime = moment(message.createdAt).format('h:mm a');
-    const html = `<li>${message.from} (${formattedTime}): ${message.text}</li>`;
+    const template = document.getElementById('message-template').innerHTML;
+    const html = Mustache.render(template, {
+        text: message.text,
+        from: message.from,
+        createdAt: formattedTime,
+    });
     element.messages.insertAdjacentHTML('beforeend', html);
 });
 
 socket.on('newLocationMessage', (message) => {
     const formattedTime = moment(message.createdAt).format('h:mm a');
-    const html = `<li>${message.from} (${formattedTime}): <a href="${message.url}" target="_blank">My Current Location</a></li>`;
+    const template = document.getElementById('location-message-template').innerHTML;
+    const html = Mustache.render(template, {
+        from: message.from,
+        createdAt: formattedTime,
+        url: message.url,
+    });
     element.messages.insertAdjacentHTML('beforeend', html);
 });
 
