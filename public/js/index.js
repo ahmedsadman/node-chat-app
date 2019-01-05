@@ -6,6 +6,21 @@ const element = {
     locationButton: document.getElementById('send-location'),
 };
 
+const scrollToBottom = () => {
+    // heights
+    const { clientHeight, scrollTop, scrollHeight } = element.messages;
+    const newMessage = element.messages.querySelector('li:last-child');
+    const lastMessage = element.messages.querySelector('li:nth-last-child(2)') || newMessage;
+    const newMessageHeight = newMessage.clientHeight;
+    const lastMessageHeight = lastMessage.clientHeight;
+
+    if (clientHeight + scrollTop + newMessageHeight + lastMessageHeight >= scrollHeight) {
+        console.log('Should scroll');
+        // defined inside js/libs/animateScroll.js
+        animateScrollTo(element.messages, scrollHeight, 800);
+    }
+};
+
 socket.on('connect', () => {
     console.log('Connected to server');
 });
@@ -22,7 +37,8 @@ socket.on('newMessage', (message) => {
         from: message.from,
         createdAt: formattedTime,
     });
-    element.messages.insertAdjacentHTML('beforeend', html);
+    if (message.text.length) element.messages.insertAdjacentHTML('beforeend', html);
+    scrollToBottom();
 });
 
 socket.on('newLocationMessage', (message) => {
@@ -34,16 +50,19 @@ socket.on('newLocationMessage', (message) => {
         url: message.url,
     });
     element.messages.insertAdjacentHTML('beforeend', html);
+    scrollToBottom();
 });
 
 document.querySelector('#message-form').onsubmit = (e) => {
     e.preventDefault();
-    socket.emit('createMessage', {
-        from: 'User',
-        text: element.messageInput.value,
-    }, () => {
-        console.log('Got it!');
-    });
+    socket.emit(
+        'createMessage',
+        {
+            from: 'User',
+            text: element.messageInput.value,
+        },
+        () => {},
+    );
     element.messageInput.value = ''; // clear input
 };
 
@@ -53,17 +72,20 @@ element.locationButton.onclick = (e) => {
     element.locationButton.disabled = true;
     element.locationButton.innerText = 'Sending Location';
 
-    navigator.geolocation.getCurrentPosition((position) => {
-        socket.emit('createLocationMessage', {
-            latitude: position.coords.latitude,
-            longitude: position.coords.longitude,
-        });
+    navigator.geolocation.getCurrentPosition(
+        (position) => {
+            socket.emit('createLocationMessage', {
+                latitude: position.coords.latitude,
+                longitude: position.coords.longitude,
+            });
 
-        element.locationButton.disabled = false;
-        element.locationButton.innerText = 'Send Location';
-    }, (error) => {
-        alert('Unable to fetch location: ', error);
-        element.locationButton.disabled = false;
-        element.locationButton.innerText = 'Send Location';
-    });
+            element.locationButton.disabled = false;
+            element.locationButton.innerText = 'Send Location';
+        },
+        (error) => {
+            alert('Unable to fetch location: ', error);
+            element.locationButton.disabled = false;
+            element.locationButton.innerText = 'Send Location';
+        },
+    );
 };
