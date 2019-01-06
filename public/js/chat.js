@@ -114,3 +114,7 @@ element.locationButton.onclick = (e) => {
         },
     );
 };
+
+document.getElementById('hamburger_menu').onclick = (e) => {
+    document.getElementsByClassName('people_list')[0].classList.toggle('show');
+};
