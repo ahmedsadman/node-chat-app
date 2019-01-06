@@ -25,12 +25,15 @@ const scrollToBottom = () => {
 socket.on('connect', () => {
     console.log('Connected to server');
     const params = getUrlParameters();
+
     socket.emit('join', params, (error) => {
         if (error) {
             alert(error);
             window.location.href = '/';
         } else {
             console.log('Join successful');
+            document.getElementById('room-name').innerText = params.room;
+            document.title = `${params.name} | Chat App`;
         }
     });
 });

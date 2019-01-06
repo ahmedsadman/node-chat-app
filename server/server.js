@@ -4,7 +4,7 @@ const express = require('express');
 const socketIO = require('socket.io');
 
 const { generateMessage, generateLocationMessage } = require('./utils/message');
-const { isRealString } = require('./utils/validation');
+const { isRealString, titleCase } = require('./utils/helper');
 const { Users } = require('./utils/users');
 
 const publicPath = path.join(__dirname, '../public');
@@ -25,9 +25,16 @@ io.on('connection', (socket) => {
             return callback('Name and room name are required');
         }
 
+        if (users.getUserByName(params.name, params.room)) {
+            return callback('Username already exists, try a different one');
+        }
+
         socket.join(params.room);
         users.removeUser(socket.id); // remove from previous room, if any
         users.addUser(socket.id, params.name, params.room);
+
+        // update rooms list
+        io.emit('updateActiveRooms', users.rooms);
 
         // tell everyone to update their user list
         io.to(params.room).emit('updateUserList', users.getUserList(params.room));
@@ -41,6 +48,10 @@ io.on('connection', (socket) => {
             .emit('newMessage', generateMessage('Admin', `${params.name} has joined`));
 
         callback();
+    });
+
+    socket.on('getActiveRooms', (callback) => {
+        callback(users.rooms);
     });
 
     // when user creates a message in his browser
@@ -74,6 +85,7 @@ io.on('connection', (socket) => {
                 'newMessage',
                 generateMessage('Admin', `${user.name} has left the room`),
             );
+            io.emit('updateActiveRooms', users.rooms);
         }
     });
 });
